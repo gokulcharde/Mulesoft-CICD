@@ -1,10 +1,15 @@
+# This workflow builds and deploys the MuleSoft application (mulesoft-cicd-demo) to CloudHub 2.0.
+# It targets both the main and qa branches, dynamically mapping them to corresponding deployment configurations.
 name: MuleSoft CI/CD Pipeline - Demo Root
 
 on:
+  # Triggers the pipeline on push events to main and qa branches
   push:
     branches: [ main, qa ]
+  # Triggers the pipeline on pull requests targeting main and qa branches (useful for build validation)
   pull_request:
     branches: [ main, qa ]
+  # Allows you to manually trigger the workflow from the GitHub Actions tab
   workflow_dispatch:
 
 jobs:
@@ -12,31 +17,37 @@ jobs:
     name: Build, Package & Deploy
     runs-on: ubuntu-latest
     steps:
+      # Step 1: Download the repository files to the runner environment
       - name: Checkout Repository
         uses: actions/checkout@v4
 
+      # Step 2: Set up Java 17 (required for Mule 4.x) and configure Maven to use Anypoint credentials
       - name: Set up JDK 17 with Maven settings
         uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
           java-version: '17'
-          cache: 'maven'
+          cache: 'maven' # Caches Maven dependencies to speed up subsequent pipeline runs
           server-id: anypoint-exchange-v3
           server-username: ANYPOINT_USERNAME
           server-password: ANYPOINT_PASSWORD
 
+      # Step 3: If running on the 'qa' branch, set environment variables for the QA deployment
       - name: Set Environment variables for QA
         if: github.ref == 'refs/heads/qa'
         run: |
           echo "ANYPOINT_ENV=Sandbox" >> $GITHUB_ENV
           echo "ANYPOINT_APPNAME=mulesoft-cicd-demo-qa" >> $GITHUB_ENV
 
+      # Step 4: If running on the 'main' branch, set environment variables for the Production deployment
       - name: Set Environment variables for Production/Main
         if: github.ref == 'refs/heads/main'
         run: |
           echo "ANYPOINT_ENV=Sandbox" >> $GITHUB_ENV
           echo "ANYPOINT_APPNAME=mulesoft-cicd-demo-prod" >> $GITHUB_ENV
 
+      # Step 5: Clean, build, publish to Exchange, and deploy to CloudHub 2.0
+      # This step only runs on pushes (merges) to the main/qa branches, not on pull request builds
       - name: Build and Deploy to CloudHub
         if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/qa')
         env:
@@ -50,3 +61,4 @@ jobs:
             -Danypoint.env="$ANYPOINT_ENV" \
             -Danypoint.target="Cloudhub-US-East-2" \
             -Danypoint.appname="$ANYPOINT_APPNAME"
+
