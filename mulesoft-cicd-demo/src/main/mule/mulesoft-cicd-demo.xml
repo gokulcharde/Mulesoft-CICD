@@ -9,6 +9,6 @@ http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/htt
 	</http:listener-config>
 	<flow name="mulesoft-cicd-demoFlow" doc:id="86dadfa7-d8e7-489b-a481-42173e63ea68" >
 		<http:listener doc:name="Listener" doc:id="f5df7e0c-56cd-4151-a15e-9cc8ca2487d1" config-ref="HTTP_Listener_config" path="/demo"/>
-		<set-payload value="Mulesoft CICD" doc:name="Set Payload" doc:id="3f0aaf3d-3772-46bb-b5c2-bd9003ecbe18" />
+		<set-payload value="Mulesoft CICD Demo" doc:name="Set Payload" doc:id="3f0aaf3d-3772-46bb-b5c2-bd9003ecbe18" />
 	</flow>
 </mule>
