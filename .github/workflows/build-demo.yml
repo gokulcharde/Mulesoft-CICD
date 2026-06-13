@@ -1,0 +1,52 @@
+name: MuleSoft CI/CD Pipeline - Demo Root
+
+on:
+  push:
+    branches: [ main, qa ]
+  pull_request:
+    branches: [ main, qa ]
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    name: Build, Package & Deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17 with Maven settings
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+          cache: 'maven'
+          server-id: anypoint-exchange-v3
+          server-username: ANYPOINT_USERNAME
+          server-password: ANYPOINT_PASSWORD
+
+      - name: Set Environment variables for QA
+        if: github.ref == 'refs/heads/qa'
+        run: |
+          echo "ANYPOINT_ENV=Sandbox" >> $GITHUB_ENV
+          echo "ANYPOINT_APPNAME=mulesoft-cicd-demo-qa" >> $GITHUB_ENV
+
+      - name: Set Environment variables for Production/Main
+        if: github.ref == 'refs/heads/main'
+        run: |
+          echo "ANYPOINT_ENV=Sandbox" >> $GITHUB_ENV
+          echo "ANYPOINT_APPNAME=mulesoft-cicd-demo-prod" >> $GITHUB_ENV
+
+      - name: Build and Deploy to CloudHub
+        if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/qa')
+        env:
+          ANYPOINT_USERNAME: ${{ secrets.ANYPOINT_USERNAME }}
+          ANYPOINT_PASSWORD: ${{ secrets.ANYPOINT_PASSWORD }}
+        run: |
+          mvn clean deploy mule:deploy -DskipTests \
+            -f mulesoft-cicd-demo/pom.xml \
+            -Danypoint.username="$ANYPOINT_USERNAME" \
+            -Danypoint.password="$ANYPOINT_PASSWORD" \
+            -Danypoint.env="$ANYPOINT_ENV" \
+            -Danypoint.target="Cloudhub-US-East-2" \
+            -Danypoint.appname="$ANYPOINT_APPNAME"

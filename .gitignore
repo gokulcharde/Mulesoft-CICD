@@ -1,0 +1,21 @@
+# Eclipse metadata and settings
+/.metadata/
+.settings/
+.project
+.classpath
+
+# MuleSoft ESB tooling & temporary files
+.mule/
+.tooling/
+.tooling-apps-cache/
+
+# Compilation / build outputs
+target/
+*.class
+*.jar
+*.war
+*.ear
+
+# Operating System file caches
+.DS_Store
+Thumbs.db
